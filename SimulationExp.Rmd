@@ -1,0 +1,144 @@
+---
+title: "Simulation Exercise Exponential Distribution"
+author: "Daniel Cevallos"
+date: "21/06/2023"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Overview
+
+The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations.
+
+### What is exponential distribution?
+
+From Wikipedia: Exponential distribution describes times between events happening at constant rate lambda with expected value 1/lambda.
+
+This simulation contains:
+
+1.  Show the sample mean and compare it to the theoretical mean of the distribution
+2.  Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution
+3.  Show that the distribution is approximately normal
+
+# Simulation
+
+The exponential distribution is simulated with `rexp(n, lambda)`, where lambda is the rate parameter. The mean of exponential distribution and standard deviation is 1/lambda. Lambda is set at 0.2 for all simulations.
+
+### Sample exponential distribution
+
+```{r}
+library(ggplot2)
+library(knitr)
+set.seed(10000) # for reproducability
+nosim <- 1000 # no of simulations
+n <- 40 # no of exponentials
+lambda <- 0.2 # rate parameter 
+
+simdata <- matrix(rexp(nosim * n, rate=lambda), nosim)
+sim_mean <- rowMeans(simdata) # row means
+
+# calculate mean, sd and variance of sample exp dist
+simdata_mean <- mean(sim_mean)
+simdata_sd <- sd(sim_mean)
+simdata_var <- var(sim_mean)
+t_mean = 1/lambda
+t_sd = (1/lambda) * (1/sqrt(n))
+t_var = t_sd^2
+```
+
+### Sample Mean VS Theoretical Mean
+
+The theoretical mean of the average of samples will be : 1/λ .The following shows that the average from sample means and the theoretical mean are very close.
+
+```{r}
+# calculate mean, df and variance of theoretical exp dist
+actual_mean <- simdata_mean 
+theoretical_mean <- 1/ lambda
+
+result1 <-data.frame("Mean"=c(actual_mean,theoretical_mean), 
+                     row.names = c("Mean from the samples ","Theoretical mean"))
+
+result1
+```
+
+The simulation mean of 4.983227 is close to the theoretical value of 5. Histogram plot of the exponential distribution n = 1000
+
+# Histogram of the sample means.
+
+```{r plot 1, echo=FALSE}
+sampleMean_data <- as.data.frame (sim_mean)
+
+ ggplot(sampleMean_data, aes(sim_mean))+geom_histogram(alpha=.5, position="identity", col="blue")+geom_vline(xintercept = theoretical_mean, colour="red",show.legend=TRUE)+geom_vline(xintercept = actual_mean, colour="yellow", show.legend=TRUE)+ggtitle ("Histogram of the sample means ")+xlab("Sample mean")+ylab("Density")
+```
+
+# Comparison between sample and theoretical statistics
+
+```{r Table 1, echo=FALSE}
+Sample_stats <- c(simdata_mean, simdata_sd, simdata_var)
+Theoretical_stats <- c(t_mean, t_sd, t_var)
+diff <-
+  c(abs(t_mean - simdata_mean),
+    abs(t_sd - simdata_sd),
+    t_var - simdata_var)
+names <- c("Mean", "Std", "Variance")
+data.frame(Sample_stats,
+           Theoretical_stats,
+           diff,
+           row.names =  c("Mean", "Std", "Variance"))
+```
+
+## Sample Mean versus Theoretical Mean
+
+Observing the table, the sample mean of the exponential distribution is centered at 5.008 whereas the theoretical mean, 1/lambda is 5
+
+The difference between the sample and theoretical mean is 0.0086
+
+## Sample Variance versus Theoretical Variance
+
+The sample Variance is is 0.621, which is very close to the theoretical variance, 0.625.
+
+The difference between them is 0.0037
+
+# Distribution
+
+## Histogram and Density plot
+
+```{r plot 2, echo=FALSE}
+library(ggplot2)
+simdata_mean <- data.frame(sim_mean)
+ggplot(simdata_mean, aes(sim_mean)) +
+    geom_histogram(
+        binwidth = .3,
+        fill = "steelblue",
+        color = "black",
+        aes(y = ..density..)
+    ) +
+    geom_density(color = "green", lwd = 1) +
+    labs(title = "Distribution of Random Exponential Values with 1000 simulations",
+         x = "Average of 40 Exponentials", y = "Density") +
+    stat_function(
+        fun = dnorm,
+        args = list(mean = t_mean, sd = t_sd),
+        color = "orange",
+        lwd = 1
+    ) +
+    theme_bw()
+
+```
+
+The red line is the theoretical normal distribution density, whereas the blue line is the density of the sample distribution. You can see that the sample distribution is approximately normal.
+
+## Q-Q plot
+
+```{r plot 3, echo=FALSE}
+qqnorm(sim_mean, col="steelblue") # sample distribution
+qqline(sim_mean, col="red", lwd=3) #theoretical
+```
+
+Observing the normal Q-Q plot, we can conclude that the sample distribution approximates the theoretical normal distribution quite closely, with the tails being less normal.
+
+------------------------------------------------------------------------
+
+
+These above listed methods of comparisons show that the distribution is approximately normal.
